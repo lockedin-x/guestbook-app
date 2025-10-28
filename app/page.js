@@ -136,22 +136,15 @@ export default function Home() {
     }
   }
 
-  const handleLikeTodo = (todoId, hasLiked) => {
+  const handleLikeTodo = (todoId) => {
+    // Toggle like - the contract will handle the logic
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: GUEST_BOOK_ABI,
-      functionName: hasLiked ? 'unlikeTodo' : 'likeTodo',
+      functionName: 'likeTodo',
       args: [todoId],
     })
   }
-
-  // Helper to check if user has liked a todo
-  const { data: likedTodos } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GUEST_BOOK_ABI,
-    functionName: 'hasLikedTodo',
-    args: address && allTodos && allTodos.length > 0 ? [allTodos[0].id, address] : undefined,
-  })
 
   const todosToDisplay = todoView === 'all' ? allTodos : userTodos
 
@@ -399,11 +392,7 @@ export default function Home() {
                         </div>
                         <div className="flex items-center gap-2 ml-4">
                           <button
-                            onClick={() => {
-                              // We need to check if this specific todo is liked
-                              // For simplicity, we'll make the call directly
-                              handleLikeTodo(todo.id, false)
-                            }}
+                            onClick={() => handleLikeTodo(todo.id)}
                             className="flex items-center gap-1 bg-white px-3 py-2 rounded-full hover:bg-pink-100 transition-colors"
                           >
                             <span className="text-lg">❤️</span>
