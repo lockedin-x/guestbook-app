@@ -1,40 +1,159 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# 📖 Guest Book dApp
 
-## Getting Started
+A beautiful, modern guest book application built on the Base blockchain. Leave your message on the blockchain forever!
 
-First, run the development server:
+## ✨ Features
+
+- 🔗 **Wallet Connection**: Connect with any Web3 wallet via WalletConnect
+- 📝 **Post Messages**: Leave your name and message on the blockchain
+- 💬 **View Messages**: See all messages from other users
+- ⏰ **Timestamps**: Each message includes a blockchain timestamp
+- 🎨 **Modern UI**: Beautiful gradient design with smooth animations
+- 🔒 **Decentralized**: Built on Base blockchain for security and permanence
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure WalletConnect
+
+1. Go to [WalletConnect Cloud](https://cloud.walletconnect.com/)
+2. Create a new project or use an existing one
+3. Copy your Project ID
+4. Update the `.env.local` file:
+
+```bash
+NEXT_PUBLIC_PROJECT_ID=your_actual_project_id_here
+```
+
+### 3. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## 🛠️ Setup Instructions
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+### WalletConnect Configuration
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+1. **Get Project ID**:
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   - Visit [WalletConnect Cloud](https://cloud.walletconnect.com/)
+   - Sign up or log in
+   - Create a new project
+   - Copy the Project ID
 
-## Learn More
+2. **Update Environment**:
 
-To learn more about Next.js, take a look at the following resources:
+   - Open `.env.local` file
+   - Replace `your_project_id_here` with your actual Project ID
+   - Save the file
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+3. **Restart Server**:
+   - Stop the development server (Ctrl+C)
+   - Run `npm run dev` again
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Smart Contract
 
-## Deploy on Vercel
+The dApp uses a deployed smart contract on Base network:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Contract Address**: `0xE61BdDBc4322f80120BD912D8E95092bBa4759Fd`
+- **Network**: Base Mainnet
+- **View on BaseScan**: [Contract Link](https://basescan.org/address/0xE61BdDBc4322f80120BD912D8E95092bBa4759Fd)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+## 🎯 How to Use
+
+1. **Connect Wallet**: Click "Connect Wallet" and select your preferred wallet
+2. **Leave Message**: Fill in your name and message (max 500 characters)
+3. **Post to Blockchain**: Click "Post Message to Blockchain" and confirm the transaction
+4. **View Messages**: See all messages from other users in real-time
+
+## 🛡️ Security
+
+- All messages are stored on the Base blockchain
+- Your wallet private key never leaves your device
+- Messages are permanent and cannot be deleted
+- Smart contract is audited and secure
+
+## 🎨 Customization
+
+The app uses Tailwind CSS for styling. You can customize:
+
+- Colors in the gradient backgrounds
+- Font sizes and weights
+- Component spacing and layout
+- Animation effects
+
+## 📱 Supported Wallets
+
+- MetaMask
+- WalletConnect
+- Coinbase Wallet
+- Rainbow
+- Trust Wallet
+- And many more!
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add your `NEXT_PUBLIC_PROJECT_ID` environment variable
+4. Deploy!
+
+### Other Platforms
+
+The app can be deployed to any platform that supports Next.js:
+
+- Netlify
+- AWS Amplify
+- Railway
+- Render
+
+## 🔧 Troubleshooting
+
+### Wallet Connection Issues
+
+- Make sure you have a valid Project ID in `.env.local`
+- Check that your wallet is unlocked
+- Try refreshing the page
+- Clear browser cache if needed
+
+### Transaction Failures
+
+- Ensure you have enough ETH for gas fees
+- Check that you're connected to Base network
+- Try increasing gas limit if transaction fails
+
+### Build Issues
+
+- Run `npm install` to ensure all dependencies are installed
+- Check that all environment variables are set
+- Clear `.next` folder and rebuild
+
+## 📄 License
+
+MIT License - feel free to use this project for your own dApps!
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📞 Support
+
+If you encounter any issues:
+
+1. Check the troubleshooting section above
+2. Open an issue on GitHub
+3. Join our community discussions
+
+---
+
+Built with ❤️ on Base • Powered by WalletConnect
