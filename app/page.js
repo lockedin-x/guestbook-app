@@ -5,10 +5,17 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useWeb3Modal } from '@web3modal/wagmi/react'
 import { GUEST_BOOK_ABI, CONTRACT_ADDRESS } from './contracts/GuestBook'
 import { formatDistanceToNow } from 'date-fns'
+import { parseEther } from 'viem'
 
 export default function Home() {
+  // Guestbook state
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
+
+  // Todo state
+  const [todoTitle, setTodoTitle] = useState('')
+  const [todoDescription, setTodoDescription] = useState('')
+  const [todoView, setTodoView] = useState('all') // 'all' or 'mine'
   const [mounted, setMounted] = useState(false)
 
   const { address, isConnected } = useAccount()
@@ -22,12 +29,34 @@ export default function Home() {
     console.log('Web3Modal not ready yet')
   }
 
-  const { data: messages, refetch } = useReadContract({
+  // Guestbook contract reads
+  const { data: messages, refetch: refetchMessages } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GUEST_BOOK_ABI,
     functionName: 'getAllMessages',
   })
 
+  // Todo contract reads
+  const { data: allTodos, refetch: refetchAllTodos } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GUEST_BOOK_ABI,
+    functionName: 'getAllTodos',
+  })
+
+  const { data: userTodos, refetch: refetchUserTodos } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GUEST_BOOK_ABI,
+    functionName: 'getUserTodos',
+    args: address ? [address] : undefined,
+  })
+
+  const { data: todoFee } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GUEST_BOOK_ABI,
+    functionName: 'todoCreationFee',
+  })
+
+  // Contract writes
   const { data: hash, writeContract, isPending } = useWriteContract()
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -42,13 +71,20 @@ export default function Home() {
     if (isSuccess) {
       setName('')
       setMessage('')
-      setTimeout(() => refetch(), 2000)
+      setTodoTitle('')
+      setTodoDescription('')
+      setTimeout(() => {
+        refetchMessages()
+        refetchAllTodos()
+        refetchUserTodos()
+      }, 2000)
     }
-  }, [isSuccess, refetch])
+  }, [isSuccess, refetchMessages, refetchAllTodos, refetchUserTodos])
 
+  // Guestbook handlers
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!name || !message) {
       alert('Please fill in both fields')
       return
@@ -61,6 +97,63 @@ export default function Home() {
       args: [name, message],
     })
   }
+
+  // Todo handlers
+  const handleCreateTodo = async (e) => {
+    e.preventDefault()
+
+    if (!todoTitle) {
+      alert('Please enter a title')
+      return
+    }
+
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: GUEST_BOOK_ABI,
+      functionName: 'createTodo',
+      args: [todoTitle, todoDescription],
+      value: todoFee,
+    })
+  }
+
+  const handleToggleTodo = (todoId) => {
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: GUEST_BOOK_ABI,
+      functionName: 'toggleTodoComplete',
+      args: [todoId],
+    })
+  }
+
+  const handleDeleteTodo = (todoId) => {
+    if (confirm('Are you sure you want to delete this todo?')) {
+      writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: GUEST_BOOK_ABI,
+        functionName: 'deleteTodo',
+        args: [todoId],
+      })
+    }
+  }
+
+  const handleLikeTodo = (todoId, hasLiked) => {
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: GUEST_BOOK_ABI,
+      functionName: hasLiked ? 'unlikeTodo' : 'likeTodo',
+      args: [todoId],
+    })
+  }
+
+  // Helper to check if user has liked a todo
+  const { data: likedTodos } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GUEST_BOOK_ABI,
+    functionName: 'hasLikedTodo',
+    args: address && allTodos && allTodos.length > 0 ? [allTodos[0].id, address] : undefined,
+  })
+
+  const todosToDisplay = todoView === 'all' ? allTodos : userTodos
 
   if (!mounted) return null
 
@@ -107,13 +200,14 @@ export default function Home() {
         </div>
 
         {isConnected && (
-          <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-4xl">✍️</span>
-              <h2 className="text-3xl font-bold text-gray-800">Leave Your Message</h2>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <>
+            <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 mb-6">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-4xl">✍️</span>
+                <h2 className="text-3xl font-bold text-gray-800">Leave Your Message</h2>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Your Name
@@ -166,6 +260,172 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 mb-6">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-4xl">✅</span>
+              <h2 className="text-3xl font-bold text-gray-800">Community Todo List</h2>
+            </div>
+
+            <form onSubmit={handleCreateTodo} className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Todo Title
+                </label>
+                <input
+                  type="text"
+                  placeholder="What needs to be done?..."
+                  value={todoTitle}
+                  onChange={(e) => setTodoTitle(e.target.value)}
+                  maxLength={100}
+                  className="w-full px-5 py-4 border-3 border-gray-200 rounded-xl text-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-200 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description (Optional)
+                </label>
+                <textarea
+                  placeholder="Add more details..."
+                  value={todoDescription}
+                  onChange={(e) => setTodoDescription(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  className="w-full px-5 py-4 border-3 border-gray-200 rounded-xl text-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-200 focus:outline-none resize-none transition-all"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Creation fee: <span className="font-bold text-purple-600">{todoFee ? `${Number(todoFee) / 1e18} ETH` : 'Loading...'}</span>
+                </p>
+                <button
+                  type="submit"
+                  disabled={isPending || isConfirming}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isPending && '📤 Sending...'}
+                  {isConfirming && '⏳ Confirming...'}
+                  {!isPending && !isConfirming && '➕ Create Todo'}
+                </button>
+              </div>
+            </form>
+
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setTodoView('all')}
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                  todoView === 'all'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                🌍 All Todos ({allTodos?.length || 0})
+              </button>
+              <button
+                onClick={() => setTodoView('mine')}
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                  todoView === 'mine'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                👤 My Todos ({userTodos?.length || 0})
+              </button>
+            </div>
+
+            {!todosToDisplay || todosToDisplay.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-7xl mb-4">📝</div>
+                <p className="text-xl text-gray-500 mb-2">No todos yet</p>
+                <p className="text-gray-400">Be the first to create a todo!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {[...todosToDisplay].reverse().map((todo, index) => {
+                  const isOwner = address && todo.creator.toLowerCase() === address.toLowerCase()
+
+                  return (
+                    <div
+                      key={todo.id.toString()}
+                      className={`group p-6 rounded-2xl border-l-4 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 ${
+                        todo.completed
+                          ? 'bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-green-500 opacity-75'
+                          : 'bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 border-purple-500'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          {isOwner && (
+                            <button
+                              onClick={() => handleToggleTodo(todo.id)}
+                              className="mt-1 text-2xl hover:scale-125 transition-transform"
+                            >
+                              {todo.completed ? '✅' : '⬜'}
+                            </button>
+                          )}
+                          {!isOwner && (
+                            <span className="mt-1 text-2xl">
+                              {todo.completed ? '✅' : '⬜'}
+                            </span>
+                          )}
+                          <div className="flex-1">
+                            <h3 className={`font-bold text-xl mb-2 ${todo.completed ? 'line-through text-gray-500' : 'text-purple-700'}`}>
+                              {todo.title}
+                            </h3>
+                            {todo.description && (
+                              <p className={`text-gray-700 mb-3 ${todo.completed ? 'line-through' : ''}`}>
+                                {todo.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">By:</span>
+                                <code className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600 font-mono">
+                                  {todo.creator.slice(0, 6)}...{todo.creator.slice(-4)}
+                                </code>
+                                {isOwner && (
+                                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                ⏰ {formatDistanceToNow(new Date(Number(todo.timestamp) * 1000), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <button
+                            onClick={() => {
+                              // We need to check if this specific todo is liked
+                              // For simplicity, we'll make the call directly
+                              handleLikeTodo(todo.id, false)
+                            }}
+                            className="flex items-center gap-1 bg-white px-3 py-2 rounded-full hover:bg-pink-100 transition-colors"
+                          >
+                            <span className="text-lg">❤️</span>
+                            <span className="font-bold text-pink-600">{todo.likes.toString()}</span>
+                          </button>
+                          {isOwner && (
+                            <button
+                              onClick={() => handleDeleteTodo(todo.id)}
+                              className="bg-red-100 text-red-600 px-3 py-2 rounded-full hover:bg-red-200 transition-colors font-bold text-sm"
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </>
         )}
 
         <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8">

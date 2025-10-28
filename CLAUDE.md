@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a decentralized guest book application built on the Base blockchain. Users can connect their Web3 wallets and post messages that are permanently stored on-chain. The project consists of:
+This is a decentralized guest book and community todo list application built on the Base blockchain. Users can connect their Web3 wallets and:
+- Post messages that are permanently stored on-chain
+- Create community todos (with a small fee)
+- Like, complete, and manage todos
+- View all todos or just their own
+
+The project consists of:
 - A Next.js 15 frontend (React 19) with Tailwind CSS
 - Solidity smart contract deployed on Base mainnet
 - Web3 integration using Wagmi v2 and Web3Modal v5
@@ -61,18 +67,39 @@ The app uses a modern Web3 stack with clear separation of concerns:
 
 3. **Main Page** (app/page.js): Client-side only component that:
    - Uses `useAccount` hook for wallet connection status
-   - Uses `useReadContract` to fetch messages via `getAllMessages()`
-   - Uses `useWriteContract` to post messages via `postMessage(name, message)`
+   - **Guestbook Features:**
+     - Uses `useReadContract` to fetch messages via `getAllMessages()`
+     - Uses `useWriteContract` to post messages via `postMessage(name, message)`
+   - **Todo Features:**
+     - Fetches todos via `getAllTodos()` and `getUserTodos(address)`
+     - Creates todos via `createTodo(title, description)` with fee payment
+     - Toggles completion via `toggleTodoComplete(todoId)` (owner only)
+     - Deletes todos via `deleteTodo(todoId)` (owner only)
+     - Likes/unlikes todos via `likeTodo(todoId)` / `unlikeTodo(todoId)`
+     - Tab system to switch between "All Todos" and "My Todos" views
    - Uses `useWaitForTransactionReceipt` to track transaction confirmation
    - Implements hydration safety with `mounted` state
 
 ### Smart Contract Architecture
-The GuestBook.sol contract (deployed at `0x086f4eC31A85a4E96d30A99bD80018E9d91e4d42`) is intentionally simple:
+The GuestBook.sol contract (deployed at `0x086f4eC31A85a4E96d30A99bD80018E9d91e4d42`) includes two main features:
+
+**Guestbook Features:**
 - **Message struct**: Stores sender address, message text, name, and timestamp
 - **Public array**: `messages[]` stores all messages on-chain
 - **postMessage()**: Validates non-empty inputs, pushes to array, emits event
 - **getAllMessages()**: Returns entire message array (frontend handles display order)
-- No moderation, deletion, or admin functions - messages are permanent
+- No moderation or deletion - messages are permanent
+
+**Todo List Features:**
+- **TodoItem struct**: Stores id, creator, title, description, completed status, likes, timestamp, exists flag
+- **Mappings**: Tracks todos by ID, user todos, and individual likes per todo
+- **createTodo()**: Requires `todoCreationFee` payment (0.00001 ETH), validates length limits (title ≤100, description ≤500)
+- **toggleTodoComplete()**: Only creator can toggle their todo's completion status
+- **deleteTodo()**: Only creator can soft-delete (sets exists=false, preserves data)
+- **likeTodo()/unlikeTodo()**: Anyone can like/unlike, prevents duplicate likes
+- **getAllTodos()**: Returns all active todos (filters out deleted)
+- **getUserTodos()**: Returns active todos for specific address
+- **Owner functions**: `updateTodoFee()`, `withdraw()` for collecting fees
 
 ### Frontend Patterns
 
@@ -82,9 +109,17 @@ The GuestBook.sol contract (deployed at `0x086f4eC31A85a4E96d30A99bD80018E9d91e4
 1. User submits form → `writeContract()` called
 2. `isPending` = true (wallet confirmation)
 3. `isConfirming` = true (blockchain confirmation)
-4. `isSuccess` = true → clear form, refetch messages after 2s delay
+4. `isSuccess` = true → clear form, refetch all data after 2s delay
 
 **Message Display**: Messages are fetched via `getAllMessages()` and reversed in the frontend (`[...messages].reverse()`) to show newest first. Contract stores chronologically.
+
+**Todo Display**:
+- Todos fetched via `getAllTodos()` or `getUserTodos(address)` depending on active tab
+- Reversed to show newest first
+- Completed todos shown with green gradient and opacity
+- Owner sees interactive checkbox and delete button
+- Everyone can like todos
+- "You" badge shown on user's own todos
 
 ## Deployment
 
@@ -105,6 +140,12 @@ If deploying a new contract:
 
 - **Base network only**: App is configured for Base mainnet (chainId 8453). Multi-chain support would require updating Web3Modal config.
 - **No backend**: All data comes from blockchain. No traditional database or API routes.
-- **Character limits**: Name (50 chars), Message (500 chars) enforced in frontend and contract
-- **No editing/deletion**: Messages are permanent by design
-- **Gas costs**: Users pay gas for `postMessage()` transactions
+- **Character limits**:
+  - Guestbook: Name (50 chars), Message (500 chars)
+  - Todos: Title (100 chars), Description (500 chars)
+- **No editing**: Messages are permanent, todos can only be completed/deleted by owner
+- **Gas costs**:
+  - Users pay gas for all transactions
+  - Todo creation requires additional fee (0.00001 ETH) sent to contract
+- **Ownership**: Only todo creators can toggle completion or delete their todos
+- **Like system**: Users can like/unlike any todo, contract prevents duplicate likes
