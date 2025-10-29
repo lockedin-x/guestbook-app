@@ -19,15 +19,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
 
   const { address, isConnected } = useAccount()
-  
-  // Only use Web3Modal after component mounts
-  let open = () => {}
-  try {
-    const modal = useWeb3Modal()
-    open = modal.open
-  } catch (e) {
-    console.log('Web3Modal not ready yet')
-  }
+  const { open } = useWeb3Modal()
 
   // Guestbook contract reads
   const { data: messages, refetch: refetchMessages } = useReadContract({
@@ -170,7 +162,7 @@ export default function Home() {
           <div className="mt-8 flex justify-center gap-4">
             {!isConnected ? (
               <button
-                onClick={() => open()}
+                onClick={() => open?.()}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
               >
                 🔗 Connect Wallet
@@ -182,7 +174,7 @@ export default function Home() {
                   <span className="font-mono">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
                 </div>
                 <button
-                  onClick={() => open()}
+                  onClick={() => open?.()}
                   className="text-purple-600 hover:text-purple-800 font-semibold underline"
                 >
                   Switch Wallet

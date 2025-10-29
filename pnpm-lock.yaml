@@ -23,9 +23,6 @@ importers:
       pino-pretty:
         specifier: ^13.1.2
         version: 13.1.2
-      pnpm:
-        specifier: ^10.20.0
-        version: 10.20.0
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -2319,11 +2316,6 @@ packages:
   pngjs@5.0.0:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
     engines: {node: '>=10.13.0'}
-
-  pnpm@10.20.0:
-    resolution: {integrity: sha512-z5mYIiFi3YWGTQqBAueJLnukzq3rv1ox+cL85I384xepxTufZGTR75BCy6LgKuAqn3wUOitDjNk8kYQPAZK53Q==}
-    engines: {node: '>=18.12'}
-    hasBin: true
 
   pony-cause@2.1.11:
     resolution: {integrity: sha512-M7LhCsdNbNgiLYiP4WjsfLUuFmCfnjdF6jKe2R9NKl4WFN+HZPGHJZ9lnLP7f9ZnKe3U9nuWD0szirmj+migUg==}
@@ -6714,8 +6706,6 @@ snapshots:
   pirates@4.0.7: {}
 
   pngjs@5.0.0: {}
-
-  pnpm@10.20.0: {}
 
   pony-cause@2.1.11: {}
 
