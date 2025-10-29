@@ -1,10 +1,7 @@
-import webpack from 'webpack';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  outputFileTracingRoot: '/Users/macbook/guestbook-app',
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Fix for MetaMask SDK issues with React Native packages
     if (!isServer) {
       config.resolve.fallback = {
