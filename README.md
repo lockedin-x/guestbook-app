@@ -2,7 +2,7 @@
 
 A beautiful, modern guest book application built on the Base blockchain. Leave your message on the blockchain forever!
 
-## ✨ Features
+## Features
 
 - 🔗 **Wallet Connection**: Connect with any Web3 wallet via WalletConnect
 - 📝 **Post Messages**: Leave your name and message on the blockchain
@@ -11,7 +11,7 @@ A beautiful, modern guest book application built on the Base blockchain. Leave y
 - 🎨 **Modern UI**: Beautiful gradient design with smooth animations
 - 🔒 **Decentralized**: Built on Base blockchain for security and permanence
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Install Dependencies
 
