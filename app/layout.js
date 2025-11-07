@@ -13,18 +13,17 @@ export const metadata = {
   openGraph: {
     title: "Guest Book",
     description: "Leave your message on the blockchain forever",
+    images: [`${appUrl}/api/og`],
   },
   other: {
     'fc:frame': 'vNext',
-    'fc:frame:image': `${appUrl}/api/frame`,
-    'fc:frame:button:1': '📬 Messages',
-    'fc:frame:button:1:action': 'post',
-    'fc:frame:button:2': '✅ Todos',
-    'fc:frame:button:2:action': 'post',
-    'fc:frame:button:3': '📱 Open App',
-    'fc:frame:button:3:action': 'link',
-    'fc:frame:button:3:target': `${appUrl}`,
-    'fc:frame:post_url': `${appUrl}/api/frame`,
+    'fc:frame:image': `${appUrl}/api/og`,
+    'fc:frame:button:1': 'View Stats',
+    'fc:frame:button:1:action': 'link',
+    'fc:frame:button:1:target': `${appUrl}/frame`,
+    'fc:frame:button:2': 'Open App',
+    'fc:frame:button:2:action': 'link',
+    'fc:frame:button:2:target': `${appUrl}`,
   },
 };
 
