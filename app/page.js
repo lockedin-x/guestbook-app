@@ -6,6 +6,8 @@ import { useWeb3Modal } from '@web3modal/wagmi/react'
 import { GUEST_BOOK_ABI, CONTRACT_ADDRESS } from './contracts/GuestBook'
 import { formatDistanceToNow } from 'date-fns'
 import { parseEther } from 'viem'
+import { useFarcaster, SignInButton } from './context/FarcasterProvider'
+import { getWarpcastShareUrl, getMessageShareText, getTodoShareText } from './utils/farcaster'
 
 export default function Home() {
   // Guestbook state
@@ -20,6 +22,7 @@ export default function Home() {
 
   const { address, isConnected } = useAccount()
   const { open } = useWeb3Modal()
+  const { farcasterUser, isAuthenticated: isFarcasterConnected, signOut: farcasterSignOut } = useFarcaster()
 
   // Guestbook contract reads
   const { data: messages, refetch: refetchMessages } = useReadContract({
@@ -140,6 +143,21 @@ export default function Home() {
 
   const todosToDisplay = todoView === 'all' ? allTodos : userTodos
 
+  // Farcaster share handlers
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+
+  const handleShareMessage = (message) => {
+    const shareText = getMessageShareText(message, appUrl)
+    const shareUrl = getWarpcastShareUrl(shareText)
+    window.open(shareUrl, '_blank')
+  }
+
+  const handleShareTodo = (todo) => {
+    const shareText = getTodoShareText(todo, appUrl)
+    const shareUrl = getWarpcastShareUrl(shareText)
+    window.open(shareUrl, '_blank')
+  }
+
   if (!mounted) return null
 
   return (
@@ -159,28 +177,75 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center gap-4">
-            {!isConnected ? (
-              <button
-                onClick={() => open?.()}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-              >
-                🔗 Connect Wallet
-              </button>
-            ) : (
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-2xl font-semibold">
-                  <span className="mr-2">✅</span>
-                  <span className="font-mono">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
-                </div>
+          <div className="mt-8 flex flex-col items-center gap-6">
+            {/* Wallet Connection */}
+            <div className="flex justify-center gap-4">
+              {!isConnected ? (
                 <button
                   onClick={() => open?.()}
-                  className="text-purple-600 hover:text-purple-800 font-semibold underline"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                 >
-                  Switch Wallet
+                  🔗 Connect Wallet
                 </button>
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-2xl font-semibold">
+                    <span className="mr-2">✅</span>
+                    <span className="font-mono">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+                  </div>
+                  <button
+                    onClick={() => open?.()}
+                    className="text-purple-600 hover:text-purple-800 font-semibold underline"
+                  >
+                    Switch Wallet
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Farcaster Connection */}
+            <div className="flex flex-col items-center gap-3 border-t pt-6 w-full max-w-md">
+              <div className="flex items-center gap-2 text-purple-600 mb-2">
+                <svg className="w-5 h-5" viewBox="0 0 1000 1000" fill="currentColor">
+                  <path d="M257.778 155.556H742.222V844.445H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333C410.742 373.333 337.446 441.677 329.586 528.889H328.889V844.445H257.778V155.556Z"/>
+                  <path d="M128.889 253.333L157.778 351.111H182.222V746.667C169.949 746.667 160 756.616 160 768.889V795.556H155.556C143.283 795.556 133.333 805.505 133.333 817.778V844.445H382.222V817.778C382.222 805.505 372.273 795.556 360 795.556H355.556V768.889C355.556 756.616 345.606 746.667 333.333 746.667H306.667V253.333H128.889Z"/>
+                  <path d="M871.111 253.333L842.222 351.111H817.778V746.667C830.051 746.667 840 756.616 840 768.889V795.556H844.444C856.717 795.556 866.667 805.505 866.667 817.778V844.445H617.778V817.778C617.778 805.505 627.727 795.556 640 795.556H644.444V768.889C644.444 756.616 654.394 746.667 666.667 746.667H693.333V253.333H871.111Z"/>
+                </svg>
+                <span className="font-bold">Connect with Farcaster</span>
               </div>
-            )}
+              {!isFarcasterConnected ? (
+                <SignInButton />
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center gap-3 bg-purple-100 text-purple-800 px-6 py-3 rounded-2xl">
+                    {farcasterUser?.pfpUrl && (
+                      <img
+                        src={farcasterUser.pfpUrl}
+                        alt={farcasterUser.username}
+                        className="w-10 h-10 rounded-full border-2 border-purple-400"
+                      />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="font-bold">@{farcasterUser?.username}</span>
+                      {farcasterUser?.displayName && (
+                        <span className="text-sm text-purple-600">{farcasterUser.displayName}</span>
+                      )}
+                    </div>
+                  </div>
+                  {farcasterUser?.bio && (
+                    <p className="text-sm text-gray-600 text-center max-w-md italic">
+                      "{farcasterUser.bio}"
+                    </p>
+                  )}
+                  <button
+                    onClick={farcasterSignOut}
+                    className="text-purple-600 hover:text-purple-800 font-semibold underline text-sm"
+                  >
+                    Sign Out of Farcaster
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -390,6 +455,17 @@ export default function Home() {
                             <span className="text-lg">❤️</span>
                             <span className="font-bold text-pink-600">{todo.likes.toString()}</span>
                           </button>
+                          <button
+                            onClick={() => handleShareTodo(todo)}
+                            className="bg-purple-100 text-purple-600 px-3 py-2 rounded-full hover:bg-purple-200 transition-colors font-bold text-sm"
+                            title="Share to Warpcast"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 1000 1000" fill="currentColor">
+                              <path d="M257.778 155.556H742.222V844.445H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333C410.742 373.333 337.446 441.677 329.586 528.889H328.889V844.445H257.778V155.556Z"/>
+                              <path d="M128.889 253.333L157.778 351.111H182.222V746.667C169.949 746.667 160 756.616 160 768.889V795.556H155.556C143.283 795.556 133.333 805.505 133.333 817.778V844.445H382.222V817.778C382.222 805.505 372.273 795.556 360 795.556H355.556V768.889C355.556 756.616 345.606 746.667 333.333 746.667H306.667V253.333H128.889Z"/>
+                              <path d="M871.111 253.333L842.222 351.111H817.778V746.667C830.051 746.667 840 756.616 840 768.889V795.556H844.444C856.717 795.556 866.667 805.505 866.667 817.778V844.445H617.778V817.778C617.778 805.505 627.727 795.556 640 795.556H644.444V768.889C644.444 756.616 654.394 746.667 666.667 746.667H693.333V253.333H871.111Z"/>
+                            </svg>
+                          </button>
                           {isOwner && (
                             <button
                               onClick={() => handleDeleteTodo(todo.id)}
@@ -446,12 +522,26 @@ export default function Home() {
                   <p className="text-gray-800 text-lg leading-relaxed mb-3 pl-9">
                     {msg.message}
                   </p>
-                  
-                  <div className="flex items-center gap-2 pl-9">
-                    <span className="text-xs text-gray-400">From:</span>
-                    <code className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600 font-mono">
-                      {msg.sender.slice(0, 8)}...{msg.sender.slice(-6)}
-                    </code>
+
+                  <div className="flex items-center justify-between pl-9">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">From:</span>
+                      <code className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600 font-mono">
+                        {msg.sender.slice(0, 8)}...{msg.sender.slice(-6)}
+                      </code>
+                    </div>
+                    <button
+                      onClick={() => handleShareMessage(msg)}
+                      className="bg-purple-100 text-purple-600 px-3 py-2 rounded-full hover:bg-purple-200 transition-colors font-bold text-sm flex items-center gap-2"
+                      title="Share to Warpcast"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 1000 1000" fill="currentColor">
+                        <path d="M257.778 155.556H742.222V844.445H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333C410.742 373.333 337.446 441.677 329.586 528.889H328.889V844.445H257.778V155.556Z"/>
+                        <path d="M128.889 253.333L157.778 351.111H182.222V746.667C169.949 746.667 160 756.616 160 768.889V795.556H155.556C143.283 795.556 133.333 805.505 133.333 817.778V844.445H382.222V817.778C382.222 805.505 372.273 795.556 360 795.556H355.556V768.889C355.556 756.616 345.606 746.667 333.333 746.667H306.667V253.333H128.889Z"/>
+                        <path d="M871.111 253.333L842.222 351.111H817.778V746.667C830.051 746.667 840 756.616 840 768.889V795.556H844.444C856.717 795.556 866.667 805.505 866.667 817.778V844.445H617.778V817.778C617.778 805.505 627.727 795.556 640 795.556H644.444V768.889C644.444 756.616 654.394 746.667 666.667 746.667H693.333V253.333H871.111Z"/>
+                      </svg>
+                      <span className="hidden sm:inline">Share</span>
+                    </button>
                   </div>
                 </div>
               ))}
