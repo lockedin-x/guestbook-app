@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useState, useEffect, useCallback } from 'react'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
 import { useWeb3Modal } from '@web3modal/wagmi/react'
 import { GUEST_BOOK_ABI, CONTRACT_ADDRESS } from './contracts/GuestBook'
 import { formatDistanceToNow } from 'date-fns'
@@ -19,6 +19,7 @@ export default function Home() {
   const [todoDescription, setTodoDescription] = useState('')
   const [todoView, setTodoView] = useState('all') // 'all' or 'mine'
   const [mounted, setMounted] = useState(false)
+  const [likedTodos, setLikedTodos] = useState({}) // Track liked status per todo ID
 
   const { address, isConnected } = useAccount()
   const { open } = useWeb3Modal()
@@ -131,15 +132,41 @@ export default function Home() {
     }
   }
 
-  const handleLikeTodo = (todoId) => {
-    // Toggle like - the contract will handle the logic
+  const handleLikeTodo = (todoId, hasLiked) => {
+    // Toggle between like and unlike based on current state
+    const functionName = hasLiked ? 'unlikeTodo' : 'likeTodo'
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: GUEST_BOOK_ABI,
-      functionName: 'likeTodo',
+      functionName,
       args: [todoId],
     })
+    // Optimistically update local state
+    setLikedTodos(prev => ({
+      ...prev,
+      [todoId.toString()]: !hasLiked
+    }))
   }
+
+  // Check if user has liked each todo when todos or address changes
+  useEffect(() => {
+    const checkLikedStatus = async () => {
+      if (!address || !allTodos || allTodos.length === 0) return
+      
+      const newLikedTodos = {}
+      // We'll rely on the contract to tell us if already liked via transaction revert
+      // For now, initialize as false and update on successful like/unlike
+      allTodos.forEach(todo => {
+        if (likedTodos[todo.id.toString()] === undefined) {
+          newLikedTodos[todo.id.toString()] = false
+        }
+      })
+      if (Object.keys(newLikedTodos).length > 0) {
+        setLikedTodos(prev => ({ ...prev, ...newLikedTodos }))
+      }
+    }
+    checkLikedStatus()
+  }, [address, allTodos])
 
   const todosToDisplay = todoView === 'all' ? allTodos : userTodos
 
@@ -449,10 +476,15 @@ export default function Home() {
                         </div>
                         <div className="flex items-center gap-2 ml-4">
                           <button
-                            onClick={() => handleLikeTodo(todo.id)}
-                            className="flex items-center gap-1 bg-white px-3 py-2 rounded-full hover:bg-pink-100 transition-colors"
+                            onClick={() => handleLikeTodo(todo.id, likedTodos[todo.id.toString()])}
+                            className={`flex items-center gap-1 px-3 py-2 rounded-full transition-colors ${
+                              likedTodos[todo.id.toString()]
+                                ? 'bg-pink-200 hover:bg-pink-300'
+                                : 'bg-white hover:bg-pink-100'
+                            }`}
+                            title={likedTodos[todo.id.toString()] ? 'Unlike this todo' : 'Like this todo'}
                           >
-                            <span className="text-lg">❤️</span>
+                            <span className="text-lg">{likedTodos[todo.id.toString()] ? '💖' : '🤍'}</span>
                             <span className="font-bold text-pink-600">{todo.likes.toString()}</span>
                           </button>
                           <button
