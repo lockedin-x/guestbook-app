@@ -1,324 +1,338 @@
-# 📖 Guest Book & Todo dApp
+# Guest Book dApp
 
-A beautiful, feature-rich blockchain application built on Base. Leave your messages and manage your todos on-chain forever!
+A decentralized application for leaving permanent messages and managing shared todo items on the Base blockchain. Users can connect their Web3 wallets or authenticate via Farcaster to interact with on chain features including posting messages, creating todos with social engagement, and sharing content to Warpcast.
 
-## ✨ Features
+## Table of Contents
 
-### 📝 Guest Book Features
-- **Post Messages**: Leave your name and message permanently on the blockchain
-- **View All Messages**: Browse all messages from other users in chronological order
-- **Message History**: Each message includes sender address and blockchain timestamp
-- **Immutable Records**: Messages are permanently stored on-chain
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Prerequisites](#prerequisites)
+5. [Installation](#installation)
+6. [Configuration](#configuration)
+7. [Running the Application](#running-the-application)
+8. [Smart Contract](#smart-contract)
+9. [API Reference](#api-reference)
+10. [Deployment](#deployment)
+11. [Troubleshooting](#troubleshooting)
+12. [Contributing](#contributing)
+13. [License](#license)
 
-### ✅ Todo List Features
-- **Create Todos**: Add todos with title and description (with creation fee)
-- **Complete Tasks**: Toggle todos between complete/incomplete status
-- **Delete Todos**: Remove your own todos from the blockchain
-- **Social Engagement**: Like/unlike other users' todos
-- **User Filtering**: View todos by specific wallet address
-- **Like Tracking**: See who liked which todos with duplicate prevention
-- **Fee Management**: Owner-controlled creation fees for spam prevention
+## Overview
 
-### 🔗 Blockchain Features
-- **Wallet Connection**: Connect with any Web3 wallet via WalletConnect
-- **Multi-Function Contract**: Unified smart contract for both features
-- **Gas Optimized**: Efficient storage and retrieval mechanisms
-- **Event Logging**: All actions emit events for transparency
-- **Owner Controls**: Fee updates and withdrawal functions
-- **Balance Tracking**: View contract balance and accumulated fees
+This application combines two core functionalities into a unified blockchain experience:
 
-### 🎨 Technical Features
-- **Modern UI**: Beautiful gradient design with smooth animations
-- **Real-time Updates**: Instant feedback on blockchain transactions
-- **Responsive Design**: Works perfectly on desktop and mobile
-- **Error Handling**: Clear error messages and transaction feedback
-- **Decentralized**: Built on Base blockchain for security and permanence
+**Guest Book Module**: Users can leave permanent messages stored on chain. Each message includes the author name, content, sender address, and timestamp. Messages are immutable once posted.
 
-##  Quick Start
+**Todo List Module**: A community driven task management system where users create todos with an optional creation fee. Features include completion toggling, deletion by creator, and a like/unlike system for social engagement.
 
-### 1. Install Dependencies
+Both modules are powered by a single smart contract deployed on Base mainnet, ensuring low transaction costs and fast confirmations while maintaining Ethereum level security.
+
+## Features
+
+### Guest Book
+
+| Capability | Description |
+|------------|-------------|
+| Post Messages | Submit name and message pairs permanently to the blockchain |
+| View History | Browse all messages in chronological order with timestamps |
+| Immutable Storage | Messages cannot be edited or deleted after submission |
+| Share to Warpcast | One click sharing of messages to Farcaster social network |
+
+### Todo List
+
+| Capability | Description |
+|------------|-------------|
+| Create Todos | Add titled tasks with optional descriptions (requires creation fee) |
+| Toggle Completion | Mark your own todos as complete or incomplete |
+| Delete Todos | Remove todos you created from the active list |
+| Like System | Support other users todos with likes (one per wallet) |
+| Filter by User | View todos from specific wallet addresses |
+| Fee Management | Contract owner can adjust creation fees as needed |
+
+### Platform Integration
+
+| Feature | Description |
+|---------|-------------|
+| Multi Wallet Support | Connect via MetaMask, WalletConnect, Coinbase Wallet, Rainbow, Trust Wallet |
+| Farcaster Authentication | Sign in with Farcaster for social identity verification |
+| Warpcast Sharing | Direct integration for sharing content to the Farcaster network |
+| Mobile Responsive | Full functionality across desktop and mobile devices |
+
+## Architecture
+
+```
+guestbook-app/
+├── app/
+│   ├── api/                    # API routes (Farcaster, Frames, OG images)
+│   ├── context/
+│   │   ├── FarcasterProvider   # Farcaster authentication context
+│   │   └── Web3Modal           # Web3 wallet connection provider
+│   ├── contracts/              # ABI definitions and contract addresses
+│   ├── utils/                  # Helper functions (Warpcast sharing)
+│   ├── layout.js               # Root layout with providers
+│   └── page.js                 # Main application component
+├── contract/
+│   ├── contracts/
+│   │   └── GuestBook.sol       # Solidity smart contract
+│   └── scripts/                # Deployment and interaction scripts
+└── public/                     # Static assets
+```
+
+### Technology Stack
+
+| Layer | Technologies |
+|-------|--------------|
+| Frontend | Next.js 15, React 19, TailwindCSS 3 |
+| Blockchain | Base Network, Wagmi 2, Viem 2 |
+| Authentication | WalletConnect, Farcaster Auth Kit |
+| Data | On chain storage via smart contract |
+
+## Prerequisites
+
+Before installation, ensure you have the following:
+
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| Node.js | 18.0 or higher | JavaScript runtime |
+| pnpm | 8.0 or higher | Package manager |
+| WalletConnect Project ID | N/A | Required for wallet connections |
+| Web3 Wallet | Any | MetaMask, Coinbase Wallet, etc. |
+| Base ETH | Small amount | For transaction gas fees |
+
+## Installation
+
+Clone the repository and install dependencies:
 
 ```bash
+git clone https://github.com/your-username/guestbook-app.git
+cd guestbook-app
+pnpm install
+```
+
+For smart contract development (optional):
+
+```bash
+cd contract
 npm install
 ```
 
-### 2. Configure WalletConnect
+## Configuration
 
-1. Go to [WalletConnect Cloud](https://cloud.walletconnect.com/)
-2. Create a new project or use an existing one
-3. Copy your Project ID
-4. Update the `.env.local` file:
+Create a `.env.local` file in the project root with the following variables:
 
-```bash
-NEXT_PUBLIC_PROJECT_ID=your_actual_project_id_here
+```
+NEXT_PUBLIC_PROJECT_ID=your_walletconnect_project_id
+NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 
-### 3. Run the Development Server
+### Obtaining a WalletConnect Project ID
 
-```bash
-npm run dev
+1. Navigate to [WalletConnect Cloud](https://cloud.walletconnect.com/)
+2. Create an account or sign in
+3. Create a new project
+4. Copy the Project ID from the project dashboard
+
+### Contract Configuration (for development)
+
+If deploying your own contract, create a `.env` file in the `contract/` directory:
+
+```
+PRIVATE_KEY=your_wallet_private_key
+BASESCAN_API_KEY=your_basescan_api_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+## Running the Application
 
-## 🛠️ Setup Instructions
+Start the development server:
 
-### WalletConnect Configuration
+```bash
+pnpm dev
+```
 
-1. **Get Project ID**:
+The application will be available at `http://localhost:3000`.
 
-   - Visit [WalletConnect Cloud](https://cloud.walletconnect.com/)
-   - Sign up or log in
-   - Create a new project
-   - Copy the Project ID
+For production builds:
 
-2. **Update Environment**:
+```bash
+pnpm build
+pnpm start
+```
 
-   - Open `.env.local` file
-   - Replace `your_project_id_here` with your actual Project ID
-   - Save the file
+## Smart Contract
 
-3. **Restart Server**:
-   - Stop the development server (Ctrl+C)
-   - Run `npm run dev` again
+The application uses a unified smart contract handling both guest book and todo functionality.
 
-### Smart Contract
+### Deployed Contract
 
-The dApp uses a deployed smart contract on Base network:
+| Property | Value |
+|----------|-------|
+| Network | Base Mainnet |
+| Chain ID | 8453 |
+| Contract Address | 0x086f4eC31A85a4E96d30A99bD80018E9d91e4d42 |
+| Solidity Version | 0.8.27 |
 
-- **Contract Address**: `0xE61BdDBc4322f80120BD912D8E95092bBa4759Fd`
-- **Network**: Base Mainnet
-- **View on BaseScan**: [Contract Link](https://basescan.org/address/0xE61BdDBc4322f80120BD912D8E95092bBa4759Fd)
+View on [BaseScan](https://basescan.org/address/0x086f4eC31A85a4E96d30A99bD80018E9d91e4d42)
 
-#### Guest Book Functions
+### Guest Book Functions
 
-**Write Functions:**
-- `postMessage(string _name, string _message)` - Post a new message to the guestbook
+**Write Operations**
 
-**Read Functions:**
-- `getAllMessages()` - Retrieve all messages
-- `getMessage(uint256 index)` - Get a specific message by index
-- `getTotalMessages()` - Get total count of messages
-- `messages(uint256)` - Access message by index
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| postMessage | string name, string message | Post a new message to the guest book |
 
-#### Todo List Functions
+**Read Operations**
 
-**Write Functions:**
-- `createTodo(string _title, string _description)` - Create a new todo (payable)
-- `toggleTodoComplete(uint256 _todoId)` - Toggle completion status
-- `deleteTodo(uint256 _todoId)` - Delete your own todo
-- `likeTodo(uint256 _todoId)` - Like a todo
-- `unlikeTodo(uint256 _todoId)` - Remove your like
+| Function | Returns | Description |
+|----------|---------|-------------|
+| getAllMessages | Message[] | Retrieve all posted messages |
+| getMessage | Message | Get a specific message by index |
+| getTotalMessages | uint256 | Get the total count of messages |
 
-**Read Functions:**
-- `getAllTodos()` - Get all todos from all users
-- `getTodo(uint256 _todoId)` - Get specific todo details
-- `getUserTodos(address _user)` - Get todos by wallet address
-- `hasLikedTodo(uint256 _todoId, address _user)` - Check if user liked a todo
-- `todoCreationFee()` - View current creation fee
-- `todoCounter()` - Get total number of todos
+### Todo Functions
 
-**Owner Functions:**
-- `updateTodoFee(uint256 _newFee)` - Update creation fee (owner only)
-- `withdraw()` - Withdraw accumulated fees (owner only)
-- `getBalance()` - View contract balance
+**Write Operations**
 
-#### Events
-- `NewMessage` - Emitted when a message is posted
-- `TodoCreated` - Emitted when a todo is created
-- `TodoCompleted` - Emitted when completion status changes
-- `TodoLiked` - Emitted when a todo is liked/unliked
-- `TodoDeleted` - Emitted when a todo is deleted
-- `FeeUpdated` - Emitted when fee is updated
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| createTodo | string title, string description | Create a new todo (payable) |
+| toggleTodoComplete | uint256 todoId | Toggle completion status (creator only) |
+| deleteTodo | uint256 todoId | Delete a todo (creator only) |
+| likeTodo | uint256 todoId | Like a todo |
+| unlikeTodo | uint256 todoId | Remove your like |
 
+**Read Operations**
 
-## 🎯 How to Use
+| Function | Returns | Description |
+|----------|---------|-------------|
+| getAllTodos | TodoItem[] | Get all active todos |
+| getTodo | TodoItem | Get specific todo by ID |
+| getUserTodos | TodoItem[] | Get todos by wallet address |
+| hasLikedTodo | bool | Check if user has liked a todo |
+| todoCreationFee | uint256 | Current fee for creating todos |
 
-### Guest Book Features
+**Owner Functions**
 
-1. **Connect Wallet**: Click "Connect Wallet" and select your preferred wallet
-2. **Leave Message**: Fill in your name and message (max 500 characters)
-3. **Post to Blockchain**: Click "Post Message to Blockchain" and confirm the transaction
-4. **View Messages**: See all messages from other users in real-time
+| Function | Description |
+|----------|-------------|
+| updateTodoFee | Set a new creation fee amount |
+| withdraw | Withdraw accumulated fees to owner |
+| getBalance | View contract ETH balance |
 
-### Todo List Features
+### Contract Events
 
-1. **Create a Todo**:
-   - Navigate to the Todo section
-   - Enter a title and description
-   - Pay the creation fee (if applicable)
-   - Confirm the transaction
+| Event | Emitted When |
+|-------|--------------|
+| NewMessage | A message is posted |
+| TodoCreated | A new todo is created |
+| TodoCompleted | Completion status changes |
+| TodoDeleted | A todo is deleted |
+| TodoLiked | A todo is liked or unliked |
+| FeeUpdated | Creation fee is updated |
 
-2. **Manage Your Todos**:
-   - **Complete**: Click the checkbox to mark as complete/incomplete
-   - **Delete**: Remove your own todos (only creator can delete)
-   - **View**: See all your todos filtered by your wallet address
+## API Reference
 
-3. **Engage with Todos**:
-   - **Like**: Support other users' todos by clicking the like button
-   - **Unlike**: Remove your like if you change your mind
-   - **Track Engagement**: See total likes and check if you've liked a todo
+### Farcaster Frame Endpoints
 
-4. **View All Todos**:
-   - Browse all public todos from all users
-   - Filter by user address
-   - See completion status, like counts, and timestamps
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /api/frame | GET/POST | Farcaster frame handler |
+| /api/og | GET | OpenGraph image generation |
+| /api/farcaster | GET/POST | Farcaster webhook and data endpoints |
 
+### Frame Metadata
 
-## 🛡️ Security
+The application includes Farcaster frame metadata for rich embedding in Warpcast and other Farcaster clients:
 
-### Data Security
-- All messages and todos are stored on the Base blockchain
-- Your wallet private key never leaves your device
-- Messages are permanent and cannot be deleted (todos can be deleted by creator)
-- Smart contract handles all on-chain logic securely
+```html
+fc:frame: vNext
+fc:frame:image: Dynamic OG image
+fc:frame:button:1: View Stats (link)
+fc:frame:button:2: Open App (link)
+```
 
-### Access Control
-- **Guest Book**: Anyone can post messages
-- **Todos**: Only creators can delete or toggle their own todos
-- **Likes**: One like per wallet address per todo (duplicate prevention)
-- **Owner Functions**: Fee updates and withdrawals restricted to contract owner
-
-### Transaction Safety
-- All transactions require user confirmation
-- Gas fees are estimated before transaction submission
-- Clear error messages for failed transactions
-- Event logging for transparency and tracking
-
-
-## 🎨 Customization
-
-The app uses Tailwind CSS for styling. You can customize:
-
-- Colors in the gradient backgrounds
-- Font sizes and weights
-- Component spacing and layout
-- Animation effects
-
-## 📱 Supported Wallets
-
-- MetaMask
-- WalletConnect
-- Coinbase Wallet
-- Rainbow
-- Trust Wallet
-- And many more!
-
-## �️ Tech Stack
-
-### Frontend
-- **Next.js** - React framework for production
-- **React** - UI component library
-- **Tailwind CSS** - Utility-first CSS framework
-- **JavaScript/JSX** - Core programming language
-
-### Blockchain
-- **Base Network** - L2 blockchain (Ethereum ecosystem)
-- **ethers.js** - Ethereum library for wallet interactions
-- **WalletConnect** - Multi-wallet connection protocol
-- **Solidity** - Smart contract programming language
-
-### Development Tools
-- **npm/pnpm** - Package management
-- **Git** - Version control
-- **Vercel** - Deployment platform
-
-### Smart Contract Features
-- **ERC-20 Compatible** - Standard token interactions
-- **Event Emission** - Transparent on-chain logging
-- **Access Control** - Owner-based permissions
-- **Payable Functions** - ETH transaction handling
-
-
-## �🚀 Deployment
+## Deployment
 
 ### Vercel (Recommended)
 
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add your `NEXT_PUBLIC_PROJECT_ID` environment variable
-4. Deploy!
+1. Push code to a GitHub repository
+2. Import the repository in [Vercel](https://vercel.com)
+3. Add environment variables in project settings:
+   - `NEXT_PUBLIC_PROJECT_ID`
+   - `NEXT_PUBLIC_APP_URL`
+4. Deploy
 
-### Other Platforms
+### Alternative Platforms
 
-The app can be deployed to any platform that supports Next.js:
+The application is compatible with any platform supporting Next.js:
 
-- Netlify
-- AWS Amplify
-- Railway
-- Render
+| Platform | Deployment Guide |
+|----------|-----------------|
+| Netlify | Use Next.js runtime plugin |
+| Railway | Direct Next.js support |
+| AWS Amplify | Next.js SSR hosting |
+| Render | Web service with build command |
 
-## 🔧 Troubleshooting
+### Smart Contract Deployment
+
+To deploy your own instance of the contract:
+
+```bash
+cd contract
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network base
+```
+
+Verify on BaseScan:
+
+```bash
+npx hardhat verify --network base DEPLOYED_CONTRACT_ADDRESS
+```
+
+## Troubleshooting
 
 ### Wallet Connection Issues
 
-- Make sure you have a valid Project ID in `.env.local`
-- Check that your wallet is unlocked
-- Try refreshing the page
-- Clear browser cache if needed
+| Problem | Solution |
+|---------|----------|
+| Modal does not appear | Verify `NEXT_PUBLIC_PROJECT_ID` is set correctly |
+| Connection rejected | Ensure wallet is unlocked and on Base network |
+| Wrong network | Switch wallet to Base (Chain ID 8453) |
 
 ### Transaction Failures
 
-- Ensure you have enough ETH for gas fees
-- Check that you're connected to Base network
-- Try increasing gas limit if transaction fails
-- Verify you have sufficient balance for todo creation fees
+| Problem | Solution |
+|---------|----------|
+| Insufficient funds | Ensure wallet has ETH for gas and creation fees |
+| Transaction reverts | Verify you meet function requirements (e.g., creator only) |
+| Nonce issues | Reset wallet transaction history or wait for pending txs |
 
-### Todo-Specific Issues
+### Build Errors
 
-- **Cannot Create Todo**: Ensure you have enough ETH for both gas fees AND creation fee
-- **Cannot Delete Todo**: Only the creator can delete their own todos
-- **Cannot Like Twice**: Each wallet can only like a todo once
-- **Fee Not Displayed**: Refresh the page or check contract connection
+| Problem | Solution |
+|---------|----------|
+| Module not found | Run `pnpm install` to ensure all dependencies are installed |
+| Type errors | Delete `.next` folder and rebuild |
+| Environment missing | Verify `.env.local` exists with required variables |
 
-### Build Issues
+## Contributing
 
-- Run `npm install` to ensure all dependencies are installed
-- Check that all environment variables are set
-- Clear `.next` folder and rebuild
-- Verify Node.js version compatibility
+Contributions are welcome. Please follow these guidelines:
 
+1. Fork the repository
+2. Create a feature branch from `main`
+3. Write clear commit messages describing changes
+4. Ensure code follows existing style conventions
+5. Test changes locally before submitting
+6. Open a pull request with a detailed description
 
-## 📄 License
+For significant changes, please open an issue first to discuss the proposed modifications.
 
-MIT License - feel free to use this project for your own dApps!
+## License
 
-## 🤝 Contributing
+This project is released under the MIT License. See the LICENSE file for details.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Acknowledgments
 
-## 📞 Support
-
-If you encounter any issues:
-
-1. Check the troubleshooting section above
-2. Open an issue on GitHub
-3. Join our community discussions
-
----
-
-## 🌟 Project Highlights
-
-- ✅ **Dual Functionality**: GuestBook + Todo List in one unified dApp
-- 🔗 **Base Network**: Built on Base L2 for fast, low-cost transactions
-- 🎨 **Modern Design**: Beautiful UI with Tailwind CSS
-- 🔐 **Secure & Decentralized**: All data stored on-chain
-- 💰 **Fee Management**: Customizable creation fees with owner controls
-- 👥 **Social Features**: Like system with engagement tracking
-- 📊 **Event Logging**: Complete transparency through blockchain events
-
-## 📈 Features at a Glance
-
-| Feature | GuestBook | Todo List |
-|---------|-----------|-----------|
-| Create | ✅ Messages | ✅ Todos (with fee) |
-| Read | ✅ All messages | ✅ All todos + Filtering |
-| Update | ❌ | ✅ Toggle complete |
-| Delete | ❌ Immutable | ✅ Creator only |
-| Social | ❌ | ✅ Like/Unlike system |
-| Filtering | ❌ | ✅ By user address |
-| Fees | ✅ Free | ✅ Configurable |
-
----
-
-Built with ❤️ on Base • Powered by WalletConnect • Next.js & Tailwind CSS
+Built on Base Network for fast, low cost transactions. Powered by WalletConnect for universal wallet support. Integrated with Farcaster for decentralized social features.
